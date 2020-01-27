@@ -1,0 +1,11 @@
+name: kaggle-latent-dogs
+channels:
+  - defaults
+  - conda-forge
+  - pytorch
+dependencies:
+  - python=3.6
+  - pytorch::pytorch
+  - pytorch::torchvision
+  - cudatoolkit=10.1
+  - tqdm
