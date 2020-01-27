@@ -1,10 +1,17 @@
 import numpy as np
+from scipy.stats import truncnorm
 import torch
+
 
 device = 'cuda'
 truncated = 0.8
 n_classes = 120
 nz = 120
+
+
+def sample_truncated_normal(size, threshold, device):
+    values = truncnorm.rvs(-threshold, threshold, size=size)
+    return torch.from_numpy(values).to(device)
 
 
 def sample(model, zs, batch_size=32, class_id=None, aux_labels=None):
@@ -47,9 +54,9 @@ def linear_interpolation(start_z, end_z, steps):
 def get_cycling_grid_same(height, width, cycles, frames_per_half_cycle):
     all_zs = torch.empty((height, width, cycles * 2 * frames_per_half_cycle, 120), device=device)
 
-    z_shared = torch.rand(120, device=device) * truncated
+    z_shared = sample_truncated_normal(120, truncated, device)
     for c in range(cycles):
-        z_individual = torch.rand(120, device=device) * truncated
+        z_individual = sample_truncated_normal(120, truncated, device)
         z_individual = z_individual.unsqueeze(0).unsqueeze(0).expand(height, width, -1)
 
         f_idx_start = c * 2 * frames_per_half_cycle
@@ -58,7 +65,7 @@ def get_cycling_grid_same(height, width, cycles, frames_per_half_cycle):
             for w in range(width):
                 all_zs[h, w, f_idx_start:f_idx_end] = linear_interpolation(z_shared, z_individual[h, w], frames_per_half_cycle)
 
-        z_shared = torch.rand(120, device=device) * truncated
+        z_shared = sample_truncated_normal(120, truncated, device)
 
         f_idx_start = c * 2 * frames_per_half_cycle + frames_per_half_cycle
         f_idx_end = f_idx_start + frames_per_half_cycle
@@ -72,16 +79,16 @@ def get_cycling_grid_same(height, width, cycles, frames_per_half_cycle):
 def get_cycling_grid(height, width, cycles, frames_per_half_cycle):
     all_zs = torch.empty((height, width, cycles * 2 * frames_per_half_cycle, 120), device=device)
 
-    z_shared = torch.rand(120, device=device) * truncated
+    z_shared = sample_truncated_normal(120, truncated, device)
     for c in range(cycles):
-        z_individual = torch.rand((height, width, 120), device=device) * truncated
+        z_individual = sample_truncated_normal((height, width, 120), truncated, device=device)
         f_idx_start = c * 2 * frames_per_half_cycle
         f_idx_end = f_idx_start + frames_per_half_cycle
         for h in range(height):
             for w in range(width):
                 all_zs[h, w, f_idx_start:f_idx_end] = linear_interpolation(z_shared, z_individual[h, w], frames_per_half_cycle)
 
-        z_shared = torch.rand(120, device=device) * truncated
+        z_shared = sample_truncated_normal(120, truncated, device)
 
         f_idx_start = c * 2 * frames_per_half_cycle + frames_per_half_cycle
         f_idx_end = f_idx_start + frames_per_half_cycle

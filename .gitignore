@@ -1,3 +1,5 @@
 generator.pth
 __pycache__/
 .idea/
+frames/
+*.mp4
