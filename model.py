@@ -117,7 +117,7 @@ class Generator(nn.Module):
             nn.utils.spectral_norm(conv3x3(2 * n_feat, 3)).apply(init_weight),
         )
 
-    def forward(self, z, label_ohe, codes_dim=24):
+    def forward(self, z, label_ohe, codes_dim=24, get_feature_maps=False):
         '''
         z.shape = (*,120)
         label_ohe.shape = (*,n_classes)
@@ -125,23 +125,27 @@ class Generator(nn.Module):
         batch = z.size(0)
         codes = torch.split(z, codes_dim, dim=1)
 
-        x = self.fc(codes[0])  # ->(*,16ch*4*4)
-        x = x.view(batch, -1, 4, 4)  # ->(*,16ch,4,4)
+        x0 = self.fc(codes[0])  # ->(*,16ch*4*4)
+        x0 = x0.view(batch, -1, 4, 4)  # ->(*,16ch,4,4)
 
         condition = torch.cat([codes[1], label_ohe], dim=1)  # (*,codes_dim+n_classes)
-        x = self.res1(x, condition)  # ->(*,16ch,8,8)
+        x1 = self.res1(x0, condition)  # ->(*,16ch,8,8)
 
         condition = torch.cat([codes[2], label_ohe], dim=1)
-        x = self.res2(x, condition)  # ->(*,8ch,16,16)
+        x2 = self.res2(x1, condition)  # ->(*,8ch,16,16)
         # x = self.attn2(x) #not change shape
 
         condition = torch.cat([codes[3], label_ohe], dim=1)
-        x = self.res3(x, condition)  # ->(*,4ch,32,32)
-        x = self.attn(x)  # not change shape
+        x3 = self.res3(x2, condition)  # ->(*,4ch,32,32)
+        x3 = self.attn(x3)  # not change shape
 
         condition = torch.cat([codes[4], label_ohe], dim=1)
-        x = self.res4(x, condition)  # ->(*,2ch,64,64)
+        x4 = self.res4(x3, condition)  # ->(*,2ch,64,64)
 
-        x = self.conv(x)  # ->(*,3,64,64)
-        x = torch.tanh(x)
-        return x
+        x5 = self.conv(x4)  # ->(*,3,64,64)
+        x5 = torch.tanh(x5)
+
+        if get_feature_maps:
+            return x0, x1, x2, x3, x4, x5
+        else:
+            return x5
