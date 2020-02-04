@@ -30,4 +30,4 @@ for f_idx in tqdm(range(all_zs.size(2))):
     for h in range(height):
         for w in range(width):
             frame[:, h * 64:(h + 1) * 64, w * 64:(w + 1) * 64] = images[h * width + w]
-    save_image(frame, 'frames/{}.png'.format(f_idx))
+    save_image(frame, 'single_frames/{}.png'.format(f_idx))

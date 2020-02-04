@@ -2,16 +2,19 @@ Setup:
 
 - `conda env create -f conda.yaml`
 - `conda activate kaggle-latent-dogs`
-- `mkdir frames`
 
 Single Breed:
 
-- `rm frames/*`
+- `mkdir single_frames`
+- `rm single_frames/*`
 - `python make_single_breed_video.py`
-- `ffmpeg -i frames/%d.png -framerate 24 single.mp4`
+- `ffmpeg -i single_frames/%d.png -framerate 24 single.mp4 -preset veryslow -crf 0 -tune film`
 
 
 Breed Grid:
-- `rm frames/*`
+
+- `mkdir breed_frames`
+- `rm breed_frames/*`
 - `python make_breed_grid_video.py`
-- `ffmpeg -i frames/%d.png -framerate 24 many.mp4`
+- `ffmpeg -i breed_frames/%d.png -framerate 24 many.mp4 -preset veryslow -crf 0 -tune film`
+
